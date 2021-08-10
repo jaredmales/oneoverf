@@ -12,6 +12,8 @@
 #include <mx/math/randomT.hpp>
 #include <mx/math/vectorUtils.hpp>
 
+#include <mx/ipc/ompLoopWatcher.hpp>
+
 namespace mx
 {
 namespace sigproc
@@ -164,12 +166,15 @@ int oneoverf<realT>::execute()
 
    // exit(0);
 
-
    //---- allocate the oversized phase screen cube ----
+   std::cerr << "allocating...\n";
    mx::improc::eigenCube<realT> tims;
    tims.resize( m_space_dim*m_space_oversamp, m_space_dim*m_space_oversamp, m_time_dim);
 
    //---- fill the temporally filtered cube ----
+   mx::ipc::ompLoopWatcher<std::ostream> tflw(tims.cols(), std::cerr);
+
+   std::cerr << "temporal filtering...\n";
    #pragma omp parallel
    {
       mx::math::normDistT<realT> normVar; //produces standard normal variates
@@ -202,6 +207,8 @@ int oneoverf<realT>::execute()
                tims.image(n)(r,c) = tts[n];
             }
          }
+         tflw.incrementAndOutputStatus();
+
       }//for c
    }//pragma omp parallel
 
@@ -219,6 +226,10 @@ int oneoverf<realT>::execute()
    mx::improc::eigenCube<realT> ims;
    ims.resize( m_space_dim, m_space_dim, m_time_dim);
 
+   //---- spatially filter the cube ----
+   mx::ipc::ompLoopWatcher<std::ostream> sflw(tims.planes(), std::cerr);
+
+   std::cerr << "spatial filtering...                                            \n";
    #pragma omp parallel
    {
       //the 2D filter
@@ -239,6 +250,8 @@ int oneoverf<realT>::execute()
                ims.image(p)(r,c) = tims.image(p)(r,c);
             }
          }
+
+         sflw.incrementAndOutputStatus();
       }
    }
 
@@ -259,7 +272,7 @@ int oneoverf<realT>::execute()
 
    mn = mx::math::vectorMean(ims.data(), ims.planes()*ims.rows()*ims.cols());
 
-   std::cerr << "Mean = " << mn << "\n";
+   std::cerr << "Mean = " << mn << "                                           \n";
    std::cerr << "rms  = " << rms << "\n";
 
    mx::fits::fitsHeader fh;
