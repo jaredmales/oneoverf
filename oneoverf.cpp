@@ -277,10 +277,10 @@ int oneoverf<realT>::execute()
 
    mx::fits::fitsHeader fh;
 
-   fh.append("TMALPHA", m_space_alpha, "Time PSD exponent alpha");
-   fh.append("TMOUTSCL", m_space_L0, "Time PSD outer scale T0");
-   fh.append("TMINNSCL", m_space_l0, "Time PSD inner scale t0");
-   fh.append("TMOVRSMP", m_space_oversamp, "Time oversampling");
+   fh.append("TMALPHA", m_time_alpha, "Time PSD exponent alpha");
+   fh.append("TMOUTSCL", m_time_T0, "Time PSD outer scale T0");
+   fh.append("TMINNSCL", m_time_t0, "Time PSD inner scale t0");
+   fh.append("TMOVRSMP", m_time_oversamp, "Time oversampling");
 
    fh.append("SPALPHA", m_space_alpha, "Space PSD exponent alpha");
    fh.append("SPOUTSCL", m_space_L0, "Space PSD outer scale L0");
